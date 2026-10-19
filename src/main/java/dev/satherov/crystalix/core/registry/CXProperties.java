@@ -2,6 +2,7 @@ package dev.satherov.crystalix.core.registry;
 
 import lombok.experimental.UtilityClass;
 
+import dev.satherov.crystalix.CXConfig;
 import dev.satherov.crystalix.Crystalix;
 import dev.satherov.crystalix.client.lang.CXLanguage;
 import dev.satherov.crystalix.common.block.CrystalixGlassBlock;
@@ -21,6 +22,10 @@ import dev.satherov.sathlib.common.properties.PropertyExtractor;
 import dev.satherov.sathlib.network.chat.SLComponent;
 
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.permissions.Permissions;
+import net.minecraft.world.entity.player.Player;
+
+import java.util.function.Predicate;
 
 @UtilityClass
 public class CXProperties {
@@ -133,4 +138,26 @@ public class CXProperties {
             .property(CXProperties.CONDUCTOR)
             .property(CXProperties.REDSTONE)
             .build();
+
+    public static boolean isEditable(BlockItemProperty<?> property) {
+        return !CXConfig.Server.getDisabledProperties().contains(property.getIdentifier().getPath());
+    }
+
+    public static boolean canApply(Player player, BlockItemProperty<?> property) {
+        return CXProperties.isEditable(property) || player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER);
+    }
+
+    public static BlockItemPropertyContainer<CrystalixGlassBlock, CrystalixWandItem> editable() {
+        return CXProperties.filter(CXProperties::isEditable);
+    }
+
+    public static BlockItemPropertyContainer<CrystalixGlassBlock, CrystalixWandItem> applicable(Player player) {
+        return CXProperties.filter(property -> CXProperties.canApply(player, property));
+    }
+
+    private static BlockItemPropertyContainer<CrystalixGlassBlock, CrystalixWandItem> filter(Predicate<BlockItemProperty<?>> filter) {
+        final BlockItemPropertyContainer.Builder<CrystalixGlassBlock, CrystalixWandItem> builder = BlockItemPropertyContainer.builder(CrystalixGlassBlock.class, CrystalixWandItem.class);
+        CXProperties.CONTAINER.getProperties().stream().filter(filter).forEach(builder::property);
+        return builder.build();
+    }
 }

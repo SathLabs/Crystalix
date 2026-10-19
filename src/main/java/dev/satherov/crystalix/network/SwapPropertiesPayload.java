@@ -54,7 +54,7 @@ public record SwapPropertiesPayload(BlockPos pos) implements SLPayload<SwapPrope
             final CrystalixGlassBlockEntity entity = CXRegistry.GLASS_BLOCK_ENTITY.get().getBlockEntity(level, pos);
             if (!state.is(CXRegistry.CRYSTALIX_BLOCK_TAG) || entity == null) return;
             
-            CXProperties.CONTAINER.applyToItem(stack, state, entity);
+            CXProperties.editable().applyToItem(stack, state, entity);
             player.getInventory().setChanged();
         }
         

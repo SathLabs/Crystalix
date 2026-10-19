@@ -63,18 +63,22 @@ public class CrystalixGlassCamoContainerFactory extends AbstractBlockCamoContain
     
     @Override
     protected CrystalixGlassCamoContainer createContainer(BlockState camoState, Level level, BlockPos blockPos, Player player, ItemAccess itemAccess) {
-        return CrystalixGlassCamoContainerFactory.createContainer(camoState, CrystalixWandItem.find(player), CrystalixGlassCamoContainerFactory.DEFAULT_TINT);
+        final CrystalixGlassCamoContainer empty = new CrystalixGlassCamoContainer(camoState, CrystalixGlassCamoContainerFactory.DEFAULT_TINT, false, CrystalixModelState.empty());
+        return CrystalixGlassCamoContainerFactory.createContainer(camoState, CrystalixWandItem.find(player), player, empty);
     }
     
-    private static CrystalixGlassCamoContainer createContainer(BlockState camoState, ItemStack wandStack, int tintColor) {
-        if (!wandStack.getOrDefault(CXRegistry.APPLY_MODE, ApplyMode.DEFAULT).equals(ApplyMode.COLORLESS)) {
+    private static CrystalixGlassCamoContainer createContainer(BlockState camoState, ItemStack wandStack, Player player, CrystalixGlassCamoContainer previous) {
+        int tintColor = previous.getTintColor();
+        if (CXProperties.canApply(player, CXProperties.COLOR) && !wandStack.getOrDefault(CXRegistry.APPLY_MODE, ApplyMode.DEFAULT).equals(ApplyMode.COLORLESS)) {
             tintColor = wandStack.getOrDefault(CXRegistry.COLOR, CrystalixGlassCamoContainerFactory.DEFAULT_TINT);
         }
-        boolean light = wandStack.getOrDefault(CXRegistry.LIGHT, false) == LightState.LIGHT;
+        
+        final CrystalixModelState model = previous.getModelState();
+        boolean light = CXProperties.canApply(player, CXProperties.LIGHT) ? wandStack.getOrDefault(CXRegistry.LIGHT, false) == LightState.LIGHT : previous.isLight();
         CrystalixModelState modelState = new CrystalixModelState(
-                wandStack.getOrDefault(CXRegistry.SHADELESS, false),
-                wandStack.getOrDefault(CXRegistry.TINTED, false),
-                wandStack.getOrDefault(CXRegistry.MATERIAL, GlassMaterial.defaultMaterial())
+                CXProperties.canApply(player, CXProperties.SHADELESS) ? wandStack.getOrDefault(CXRegistry.SHADELESS, false) : model.isShadeless(),
+                CXProperties.canApply(player, CXProperties.TINTED) ? wandStack.getOrDefault(CXRegistry.TINTED, false) : model.isTinted(),
+                CXProperties.canApply(player, CXProperties.MATERIAL) ? wandStack.getOrDefault(CXRegistry.MATERIAL, GlassMaterial.defaultMaterial()) : model.getMaterial()
         );
         return new CrystalixGlassCamoContainer(camoState, tintColor, light, modelState);
     }
@@ -82,15 +86,15 @@ public class CrystalixGlassCamoContainerFactory extends AbstractBlockCamoContain
     @Override
     protected @Nullable BlockState getStateFromItemStack(Level level, BlockPos pos, Player player, ItemAccess itemAccess) {
         if (itemAccess.getResource().getItem() instanceof BlockItem item) {
-            return CrystalixGlassCamoContainerFactory.applyWandModifiers(item.getBlock().defaultBlockState(), CrystalixWandItem.find(player));
+            return CrystalixGlassCamoContainerFactory.applyWandModifiers(item.getBlock().defaultBlockState(), CrystalixWandItem.find(player), player);
         }
         return null;
     }
     
-    private static BlockState applyWandModifiers(BlockState state, ItemStack wand) {
+    private static BlockState applyWandModifiers(BlockState state, ItemStack wand, Player player) {
         if (!(state.getBlock() instanceof CrystalixGlassBlock)) return state;
         
-        BlockState newState = CXProperties.CONTAINER.applyToBlock(wand, state).state()
+        BlockState newState = CXProperties.applicable(player).applyToBlock(wand, state).state()
                 .setValue(CrystalixGlassBlock.INVISIBLE, false)
                 .setValue(CrystalixGlassBlock.GHOST, GhostState.BLOCK_ALL);
         
@@ -120,8 +124,8 @@ public class CrystalixGlassCamoContainerFactory extends AbstractBlockCamoContain
     @Override
     public CrystalixGlassCamoContainer handleInteraction(Level level, BlockPos pos, Player player, CrystalixGlassCamoContainer camo, ItemStack stack, InteractionHand hand) {
         if (stack.is(CXRegistry.CRYSTALIX_WAND)) {
-            BlockState state = CrystalixGlassCamoContainerFactory.applyWandModifiers(camo.getState(), stack);
-            return CrystalixGlassCamoContainerFactory.createContainer(state, stack, camo.getTintColor());
+            BlockState state = CrystalixGlassCamoContainerFactory.applyWandModifiers(camo.getState(), stack, player);
+            return CrystalixGlassCamoContainerFactory.createContainer(state, stack, player, camo);
         }
         return camo;
     }

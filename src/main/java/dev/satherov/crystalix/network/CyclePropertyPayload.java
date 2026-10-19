@@ -50,7 +50,7 @@ public record CyclePropertyPayload(Identifier identifier, boolean dir) implement
             if (stack.isEmpty()) return;
             
             BlockItemProperty<?> property = Provider.getProperty(payload.identifier());
-            if (property == null) return;
+            if (property == null || !CXProperties.isEditable(property)) return;
             
             property.cycleItem(payload.dir(), stack, CXRegistry.CRYSTALIX_BLOCK.get().defaultBlockState());
             player.getInventory().setChanged();

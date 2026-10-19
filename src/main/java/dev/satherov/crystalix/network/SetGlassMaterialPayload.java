@@ -3,6 +3,7 @@ package dev.satherov.crystalix.network;
 import dev.satherov.crystalix.Crystalix;
 import dev.satherov.crystalix.common.item.CrystalixWandItem;
 import dev.satherov.crystalix.common.properties.GlassMaterial;
+import dev.satherov.crystalix.core.registry.CXProperties;
 import dev.satherov.crystalix.core.registry.CXRegistry;
 import dev.satherov.sathlib.core.annotations.NothingNull;
 import dev.satherov.sathlib.network.handling.SLPayload;
@@ -42,7 +43,7 @@ public record SetGlassMaterialPayload(GlassMaterial material) implements SLPaylo
         @Override
         public void handle(SetGlassMaterialPayload payload, IPayloadContext context, ServerPlayer player) {
             ItemStack stack = CrystalixWandItem.find(player);
-            if (stack.isEmpty()) return;
+            if (stack.isEmpty() || !CXProperties.isEditable(CXProperties.MATERIAL)) return;
             
             stack.set(CXRegistry.MATERIAL, payload.material());
             player.getInventory().setChanged();

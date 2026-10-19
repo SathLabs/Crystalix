@@ -10,6 +10,7 @@ import dev.satherov.crystalix.core.registry.CXProperties;
 import dev.satherov.crystalix.core.registry.CXRegistry;
 import dev.satherov.crystalix.network.SwapPropertiesPayload;
 import dev.satherov.sathlib.client.input.SLKeybindManager;
+import dev.satherov.sathlib.common.properties.BlockItemPropertyContainer;
 
 import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
@@ -62,12 +63,13 @@ public class CXKeybinds {
             final CrystalixGlassBlockEntity entity = CXRegistry.GLASS_BLOCK_ENTITY.get().getBlockEntity(level, pos);
             if (!(state.getBlock() instanceof CrystalixGlassBlock) || entity == null) return;
             
-            if (CXProperties.CONTAINER.matches(stack, state, entity)) {
+            final BlockItemPropertyContainer<CrystalixGlassBlock, CrystalixWandItem> editable = CXProperties.editable();
+            if (editable.matches(stack, state, entity)) {
                 player.sendOverlayMessage(CXLanguage.MESSAGE_PROPERTY_MATCH.translate(ChatFormatting.GRAY));
                 return;
             }
             
-            CXProperties.CONTAINER.applyToItem(stack, state, entity);
+            editable.applyToItem(stack, state, entity);
             ClientPacketDistributor.sendToServer(new SwapPropertiesPayload(pos));
             player.sendOverlayMessage(CXLanguage.MESSAGE_PROPERTY_PICK.translate(ChatFormatting.GRAY));
         }

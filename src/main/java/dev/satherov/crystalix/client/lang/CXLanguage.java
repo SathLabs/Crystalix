@@ -38,6 +38,7 @@ public enum CXLanguage implements SLTranslatable {
     TOOLTIP_RMB                ("tooltip",      "rmb",                   "%s or %s to cycle backward"),
     TOOLTIP_OPEN_COLORS        ("tooltip",      "open_colors",           "%s to open color picker"),
     TOOLTIP_OPEN_MATERIALS     ("tooltip",      "open_materials",        "%s to open material picker"),
+    TOOLTIP_DISABLED           ("tooltip",      "disabled",              "Disabled by the server config"),
                                                                          
     TOOLTIP_INVISIBLE_ON       ("tooltip",      "invisible.on",          "Will not be rendered"),
     TOOLTIP_INVISIBLE_OFF      ("tooltip",      "invisible.off",         "Renders as normal"),

@@ -43,6 +43,8 @@ public class CXRadialScreen extends RadialScreen<CXRadialScreen, CXRadialScreen.
     private static final int HOVER_TITLE_COLOR = 0xFFFFFFFF;
     private static final int VALUE_COLOR = 0xFFC6D2DE;
     private static final int HOVER_VALUE_COLOR = 0xFFE5EEF7;
+    private static final int DISABLED_TEXT_COLOR = 0xFF6E6E6E;
+    private static final int DISABLED_SLICE_COLOR = 0xC0101010;
     
     private final ItemStack stack;
     
@@ -107,7 +109,9 @@ public class CXRadialScreen extends RadialScreen<CXRadialScreen, CXRadialScreen.
         lines.add(property.getName().translate(ChatFormatting.DARK_GRAY));
         lines.add(property.displayItemTooltip(this.stack, CXRegistry.CRYSTALIX_BLOCK.get().defaultBlockState()).style(ChatFormatting.DARK_GRAY));
         
-        if (property == CXProperties.COLOR) {
+        if (!CXProperties.isEditable(property)) {
+            lines.add(CXLanguage.TOOLTIP_DISABLED.translate(ChatFormatting.RED));
+        } else if (property == CXProperties.COLOR) {
             lines.add(CXLanguage.TOOLTIP_OPEN_COLORS.translate(
                     ChatFormatting.DARK_GRAY,
                     CXRadialScreen.mouseKey(GLFW.GLFW_MOUSE_BUTTON_MIDDLE)
@@ -139,16 +143,24 @@ public class CXRadialScreen extends RadialScreen<CXRadialScreen, CXRadialScreen.
     final class PropertySlice extends RadialScreen.RadialSlice<CXRadialScreen, PropertySlice> {
         
         private final BlockItemProperty<?> property;
+        private final boolean editable;
         
         private PropertySlice(BlockItemProperty<?> property) {
             this.property = property;
-            this.setLabelColor(CXRadialScreen.TITLE_COLOR);
+            this.editable = CXProperties.isEditable(property);
+            this.setLabelColor(this.editable ? CXRadialScreen.TITLE_COLOR : CXRadialScreen.DISABLED_TEXT_COLOR);
+            
+            if (!this.editable) {
+                this.setBaseColor(CXRadialScreen.DISABLED_SLICE_COLOR);
+                this.setHoverColor(CXRadialScreen.DISABLED_SLICE_COLOR);
+            }
         }
         
         @Override
         protected void renderContents(GuiGraphicsExtractor graphics, RadialScreen.SliceRenderContext<CXRadialScreen, PropertySlice> context) {
             Component title = this.property.getName().translate();
-            Component value = this.property.displayItemValue(CXRadialScreen.this.stack, CXRegistry.CRYSTALIX_BLOCK.get().defaultBlockState());
+            Component display = this.property.displayItemValue(CXRadialScreen.this.stack, CXRegistry.CRYSTALIX_BLOCK.get().defaultBlockState());
+            Component value = this.editable ? display : Component.literal(display.getString());
             
             int halfLineHeight = CXRadialScreen.this.font.lineHeight / 2;
             int displayX = Math.round(context.xAlongMiddle(CXRadialScreen.DISPLAY_POSITION));
@@ -159,19 +171,23 @@ public class CXRadialScreen extends RadialScreen<CXRadialScreen, CXRadialScreen.
                     title,
                     displayX,
                     displayY - CXRadialScreen.this.font.lineHeight,
-                    context.hovered() ? CXRadialScreen.HOVER_TITLE_COLOR : this.getLabelColor()
+                    context.hovered() && this.editable ? CXRadialScreen.HOVER_TITLE_COLOR : this.getLabelColor()
             );
             graphics.centeredText(
                     CXRadialScreen.this.font,
                     value,
                     displayX,
                     displayY + CXRadialScreen.this.font.lineHeight,
-                    context.hovered() ? CXRadialScreen.HOVER_VALUE_COLOR : CXRadialScreen.VALUE_COLOR
+                    this.editable ? (context.hovered() ? CXRadialScreen.HOVER_VALUE_COLOR : CXRadialScreen.VALUE_COLOR) : CXRadialScreen.DISABLED_TEXT_COLOR
             );
         }
         
         @Override
         public boolean mousePressed(CXRadialScreen screen, MouseButtonEvent event, boolean doubleClick) {
+            if (!this.editable) {
+                return false;
+            }
+            
             return switch (event.button()) {
                 case GLFW.GLFW_MOUSE_BUTTON_LEFT -> screen.cycle(this.property, true);
                 case GLFW.GLFW_MOUSE_BUTTON_RIGHT -> screen.cycle(this.property, false);
@@ -190,7 +206,7 @@ public class CXRadialScreen extends RadialScreen<CXRadialScreen, CXRadialScreen.
         
         @Override
         public boolean mouseScrolled(CXRadialScreen screen, double mouseX, double mouseY, double scrollX, double scrollY) {
-            if (scrollY == 0.0D) return false;
+            if (scrollY == 0.0D || !this.editable) return false;
             return screen.cycle(this.property, scrollY > 0.0D);
         }
     }

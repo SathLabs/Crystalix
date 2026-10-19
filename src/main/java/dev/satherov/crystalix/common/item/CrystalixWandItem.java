@@ -3,6 +3,7 @@ package dev.satherov.crystalix.common.item;
 import dev.satherov.crystalix.CXConfig;
 import dev.satherov.crystalix.client.CXKeybinds;
 import dev.satherov.crystalix.client.lang.CXLanguage;
+import dev.satherov.crystalix.common.block.CrystalixGlassBlock;
 import dev.satherov.crystalix.common.block.CrystalixGlassBlockEntity;
 import dev.satherov.crystalix.common.properties.ApplyMode;
 import dev.satherov.crystalix.common.properties.GhostState;
@@ -13,6 +14,7 @@ import dev.satherov.crystalix.core.registry.CXRegistry;
 import dev.satherov.sathlib.common.item.SLItem;
 import dev.satherov.sathlib.common.item.SLItemProperties;
 import dev.satherov.sathlib.common.properties.BlockItemProperty;
+import dev.satherov.sathlib.common.properties.BlockItemPropertyContainer;
 import dev.satherov.sathlib.core.annotations.NothingNull;
 import dev.satherov.sathlib.network.chat.SLComponent;
 import dev.satherov.sathlib.util.deferred.SLBlockCrawler;
@@ -103,6 +105,7 @@ public class CrystalixWandItem extends SLItem {
         final ItemStack stack = context.getItemInHand();
         final BlockPos blockPos = context.getClickedPos();
         final BlockState blockState = level.getBlockState(blockPos);
+        final BlockItemPropertyContainer<CrystalixGlassBlock, CrystalixWandItem> applicable = CXProperties.applicable(player);
         
         if (player.isShiftKeyDown()) {
             
@@ -127,23 +130,24 @@ public class CrystalixWandItem extends SLItem {
                                 if (entity == null) return false;
                                 
                                 if (exact) return CXProperties.CONTAINER.matchBlocks(stack, blockState, fakeEntity, state, entity);
-                                return !CXProperties.CONTAINER.matches(copy, state, entity);
+                                return !applicable.matches(copy, state, entity);
                             })
-                            .consumer((pos, state) -> CrystalixWandItem.updateBlock(level, copy, pos, state))
+                            .consumer((pos, _) -> CrystalixWandItem.updateBlock(level, applicable, copy, pos))
                             .iterations(CXConfig.Common.getMaxBlockEditsPerTick())
                             .stopCondition(c -> c.visitedCount() > CXConfig.Common.getMaxBlockEdits())
                             .build()
             );
         }
         
-        return CrystalixWandItem.updateBlock(level, stack, blockPos, blockState) ? InteractionResult.SUCCESS_SERVER : InteractionResult.FAIL;
+        return CrystalixWandItem.updateBlock(level, applicable, stack, blockPos) ? InteractionResult.SUCCESS_SERVER : InteractionResult.FAIL;
     }
     
-    private static boolean updateBlock(ServerLevel level, ItemStack stack, BlockPos pos, BlockState state) {
+    private static boolean updateBlock(ServerLevel level, BlockItemPropertyContainer<CrystalixGlassBlock, CrystalixWandItem> properties, ItemStack stack, BlockPos pos) {
+        final BlockState state = level.getBlockState(pos);
         final CrystalixGlassBlockEntity entity = CXRegistry.GLASS_BLOCK_ENTITY.get().getBlockEntity(level, pos);
         if (!state.is(CXRegistry.CRYSTALIX_BLOCK_TAG) || entity == null) return false;
         
-        BlockState updated = CXProperties.CONTAINER.applyToBlock(stack, state, entity).state();
+        BlockState updated = properties.applyToBlock(stack, state, entity).state();
         level.setBlockAndUpdate(pos, updated);
         return true;
     }

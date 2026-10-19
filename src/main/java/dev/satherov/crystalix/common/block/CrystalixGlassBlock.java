@@ -102,7 +102,7 @@ public class CrystalixGlassBlock extends SLBlock implements SLEntityBlock<Crysta
         
         ItemStack stack = player.getItemInHand(InteractionHand.OFF_HAND);
         if (stack.getItem() instanceof CrystalixWandItem) {
-            state = CXProperties.CONTAINER.applyToBlock(stack, state).state();
+            state = CXProperties.applicable(player).applyToBlock(stack, state).state();
         }
         return state;
     }
@@ -113,7 +113,7 @@ public class CrystalixGlassBlock extends SLBlock implements SLEntityBlock<Crysta
         if (!(placer instanceof ServerPlayer player)) return;
         ItemStack stack = player.getItemInHand(InteractionHand.OFF_HAND);
         CrystalixGlassBlockEntity entity = CXRegistry.GLASS_BLOCK_ENTITY.get().getBlockEntity(level, pos);
-        if (stack.getItem() instanceof CrystalixWandItem && entity != null) state = CXProperties.CONTAINER.applyToBlock(stack, state, entity).state();
+        if (stack.getItem() instanceof CrystalixWandItem && entity != null) state = CXProperties.applicable(player).applyToBlock(stack, state, entity).state();
         
         FluidState fluid = level.getFluidState(pos);
         BlockState updated = state.setValue(CrystalixGlassBlock.WATERLOGGED, CrystalixGlassBlockEntity.isWaterloggable(level, pos) && fluid.getType() == Fluids.WATER);

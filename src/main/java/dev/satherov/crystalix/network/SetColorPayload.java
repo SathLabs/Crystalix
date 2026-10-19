@@ -42,7 +42,7 @@ public record SetColorPayload(int color) implements SLPayload<SetColorPayload> {
         @Override
         public void handle(SetColorPayload payload, IPayloadContext context, ServerPlayer player) {
             final ItemStack stack = CrystalixWandItem.find(player);
-            if (stack.isEmpty()) return;
+            if (stack.isEmpty() || !CXProperties.isEditable(CXProperties.COLOR)) return;
             
             CXProperties.COLOR.applyValueItem(payload.color(), stack, CXRegistry.CRYSTALIX_BLOCK.get().defaultBlockState());
             player.getInventory().setChanged();

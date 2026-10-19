@@ -12,6 +12,8 @@ import dev.satherov.sathlib.config.data.ConfigHolder;
 
 import net.neoforged.fml.config.ModConfig;
 
+import java.util.List;
+
 @UtilityClass
 @ConfigHolder
 public class CXConfig {
@@ -33,7 +35,18 @@ public class CXConfig {
                 """)
         private static int maxBlockEditsPerTick = 256;
     }
-    
+
+    @Config(ModConfig.Type.SERVER)
+    public static final class Server {
+
+        @Getter
+        @ConfigEntry(comment = """
+                Wand properties that can't be changed on a wand. Only operators can apply them to blocks.
+                Valid values: "apply_mode", "invisible", "light", "ghost", "color", "material", "shadeless", "tinted", "reinforced", "waterloggable", "conductor", "redstone"
+                """)
+        private static List<String> disabledProperties = List.of();
+    }
+
     @Config(ModConfig.Type.CLIENT)
     public static final class Client {
         
