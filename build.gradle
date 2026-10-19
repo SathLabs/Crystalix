@@ -2,6 +2,7 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id 'net.neoforged.moddev' version '2.0.141'
+    id 'com.hypherionmc.modutils.modpublisher' version '2.2.2'
     id 'io.freefair.lombok' version '9.2.0'
     id 'idea'
 }
@@ -132,25 +133,11 @@ publishing {
             version = project.version
         }
     }
-    repositories {
-        maven {
-            name = 'reposilite'
+}
 
-            def isSnapshot = project.version.toString().endsWith('-SNAPSHOT')
-            def repoUrl = isSnapshot ? 'https://maven.satherov.dev/snapshots' : 'https://maven.satherov.dev/releases'
-
-            url = uri(repoUrl)
-
-            credentials {
-                username = System.getenv('REPOSILITE_USERNAME')
-                password = System.getenv('REPOSILITE_TOKEN')
-            }
-
-            authentication {
-                basic(BasicAuthentication)
-            }
-        }
-    }
+publisher {
+    setCurseID("1187033")
+    setGameVersions(minecraft_version)
 }
 
 tasks.withType(JavaCompile).configureEach {

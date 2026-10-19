@@ -1,0 +1,1 @@
+- Allow disabling any property via a server config
